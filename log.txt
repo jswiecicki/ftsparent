@@ -1,0 +1,10 @@
+sent record(key=1 value={"uniqueId":500900732,"fname":"uvphz","lname":"jfpji","accountBalance":985216.918913853,"timeGenerated":1509665848378}) meta(partition=0, offset=84) time=495
+sent record(key=2 value={"uniqueId":779393967,"fname":"eeqiy","lname":"cdras","accountBalance":401731.46600349963,"timeGenerated":1509665848621}) meta(partition=0, offset=85) time=536
+sent record(key=3 value={"uniqueId":53718511,"fname":"pmujg","lname":"kdnmr","accountBalance":333356.3265865168,"timeGenerated":1509665848627}) meta(partition=0, offset=86) time=565
+sent record(key=4 value={"uniqueId":912371500,"fname":"hafvs","lname":"bqyrp","accountBalance":654384.1872106622,"timeGenerated":1509665848628}) meta(partition=0, offset=87) time=595
+sent record(key=5 value={"uniqueId":264923301,"fname":"qpcyw","lname":"yiaur","accountBalance":162344.21709136383,"timeGenerated":1509665848629}) meta(partition=0, offset=88) time=624
+sent record(key=6 value={"uniqueId":733180980,"fname":"lmtan","lname":"aisfl","accountBalance":54554.831235113284,"timeGenerated":1509665848634}) meta(partition=0, offset=89) time=653
+sent record(key=7 value={"uniqueId":726938267,"fname":"cqywq","lname":"sgxpp","accountBalance":494467.8028676628,"timeGenerated":1509665848635}) meta(partition=0, offset=90) time=682
+sent record(key=8 value={"uniqueId":813534456,"fname":"csffa","lname":"lwvhv","accountBalance":55981.19754938424,"timeGenerated":1509665848635}) meta(partition=0, offset=91) time=714
+sent record(key=9 value={"uniqueId":874233717,"fname":"ltzxs","lname":"wjahb","accountBalance":209875.11142959713,"timeGenerated":1509665848635}) meta(partition=0, offset=92) time=743
+sent record(key=10 value={"uniqueId":517975343,"fname":"umysp","lname":"kzhji","accountBalance":736250.8174541718,"timeGenerated":1509665848636}) meta(partition=0, offset=93) time=770

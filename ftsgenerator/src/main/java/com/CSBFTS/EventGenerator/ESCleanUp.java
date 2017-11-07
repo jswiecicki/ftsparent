@@ -20,7 +20,7 @@ import java.util.Set;
  * used to clean up the es database after each test
  */
 public class ESCleanUp {
-    final static String index = "account_index";
+    final static String index = "accounts_index";
     final static String type = "account";
 
 

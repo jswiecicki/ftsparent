@@ -9,10 +9,9 @@ public class TestRunner {
         EventGenerator eGen = new EventGenerator();
 
         if (args.length == 0) {
-
-            eGen.runAddTest(10); // arg specifies how many times to send a message
+            eGen.runAddTest(15, 5, "event_gen_output.txt"); // arg specifies how many times to send a message
         } else {
-            eGen.runAddTest(Integer.parseInt(args[0]));
+            eGen.runAddTest(Integer.parseInt(args[0]), 5, "event_gen_output.txt");
         }
     }
 }

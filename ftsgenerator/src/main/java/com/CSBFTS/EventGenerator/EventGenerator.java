@@ -6,11 +6,14 @@ import org.apache.kafka.connect.json.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 public class EventGenerator {
     private ObjectMapper mapper;
@@ -20,7 +23,6 @@ public class EventGenerator {
     public EventGenerator(){
         mapper = new ObjectMapper(); // costly operation, reuse heavily
     }
-
 
     private static Producer<String, JsonNode> createProducer() {
         Properties props = new Properties();
@@ -35,36 +37,41 @@ public class EventGenerator {
         return new KafkaProducer<String, JsonNode>(props);
     }
 
-
-    public void runProducer(HashMap<Integer, JsonNode> accountDataMap) {
+    public void runProducer(HashMap<Integer, JsonNode> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output) {
         final Producer<String, JsonNode> producer = createProducer();
-
         long time = System.currentTimeMillis();
 
+        for (Map.Entry<Integer, JsonNode> entry : accountDataMap.entrySet()){
+            Integer index = entry.getKey();
+            JsonNode jsonData = entry.getValue();
+
+            final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(TOPIC, String.valueOf(index), jsonData); // creates a record to send
+            producer.send(record);
+
+            long elapsedTime = System.currentTimeMillis() - time;
+
             try {
-                for (Map.Entry<Integer, JsonNode> entry : accountDataMap.entrySet()){
-                    Integer index = entry.getKey();
-                    JsonNode jsonData = entry.getValue();
-
-                    final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(TOPIC, String.valueOf(index), jsonData); // creates a record to send
-                    RecordMetadata metadata = producer.send(record).get();
-
-                    long elapsedTime = System.currentTimeMillis() - time;
-                    System.out.printf("sent record(key=%s value=%s) " + "meta(partition=%d, offset=%d) time=%d\n",
-                            record.key(), record.value(), metadata.partition(),
-                            metadata.offset(), elapsedTime);
-                }
-
-            } catch (InterruptedException e) {
-                //add error messages
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                //add error messages
-                e.printStackTrace();
-            } finally{
-                producer.flush();
-                producer.close();
+//                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
+                output.write("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
+            } catch (IOException e) {
+                System.out.println("WHAT!? There was an error writing to the file!");
             }
+
+            try {
+                Thread.sleep(intervalBtwnKafkaMsg);
+            } catch (InterruptedException e) {
+                System.out.println("Oopsie daisy, there was an issue sleeping the thread!");
+            }
+        }
+        try {
+            output.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        producer.flush();
+        producer.close();
+
     }
 
     public  HashMap<Integer, JsonNode> createAdd(int amount){
@@ -85,10 +92,19 @@ public class EventGenerator {
     }
 
 
-    public void runAddTest(int amount){
-        HashMap<Integer, JsonNode> accountDataMap = createAdd(amount);
+    public void runAddTest(int numOfCreatedAccounts, int qps, String outputFile){
+        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts);
+        long intervalBtwnKafkaMsg = (long)1000/qps;
+
+        BufferedWriter output = null;
         try {
-            runProducer(accountDataMap);
+            output = new BufferedWriter(new FileWriter(outputFile));
+        } catch (IOException e) {
+            System.out.println("Um wait... We could not open up the file.");
+        }
+
+        try {
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output);
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }

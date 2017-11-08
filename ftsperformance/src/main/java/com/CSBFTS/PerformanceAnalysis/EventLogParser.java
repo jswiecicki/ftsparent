@@ -7,11 +7,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class EventLogParser {
 
     public static void main(String[] args) {
+        HashMap<String, Long> map = parseEventLog();
 
+        Iterator i = map.entrySet().iterator();
+        while(i.hasNext()) {
+            HashMap.Entry pair = (HashMap.Entry)i.next();
+            System.out.println("id: "+pair.getKey() + " timestamp: " + pair.getValue());
+        }
 
     }
 
@@ -42,10 +49,11 @@ public class EventLogParser {
                     String ts = line.substring(indexOfTimestamp, endIndex);
                     Long longTimestamp = Long.parseLong(ts);
 
-
                     Timestamp t = new Timestamp(longTimestamp);
-                    //System.out.println(t.toString());
-                    System.out.println("id: "+uid + " timestamp: " +t.toString());
+
+                    map.put(uid, longTimestamp);
+
+                    //System.out.println("id: "+uid + " timestamp: " +t.toString());
 
 
                 } catch (Exception e) {

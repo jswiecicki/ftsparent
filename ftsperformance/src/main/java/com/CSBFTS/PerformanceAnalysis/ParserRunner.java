@@ -33,9 +33,6 @@ public class ParserRunner {
             else{
                 continue;
             }
-            //j++;
         }
-
-
     }
 }

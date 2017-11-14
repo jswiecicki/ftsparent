@@ -1,17 +1,41 @@
 package com.CSBFTS.PerformanceAnalysis;
 
-import java.util.HashMap;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashMap;
 
 public class ParserRunner {
     public static void main(String[] args) {
-        HashMap<String,Long> map = EventLogParser.parseEventLog();
+        ArrayList<String[]> slowLogData = ElasticLogParser.parse();
 
-        Iterator i = map.entrySet().iterator();
-        while(i.hasNext()) {
+        HashMap<String,Long> eventLogMap = EventLogParser.parseEventLog();
+
+        Iterator i = eventLogMap.entrySet().iterator();
+
+        int j = 0;
+        while(i.hasNext() && j < slowLogData.size()) {
+            String[] arr = slowLogData.get(j);
+
             HashMap.Entry pair = (HashMap.Entry)i.next();
-            System.out.println("id: "+pair.getKey() + " timestamp: " + pair.getValue());
+            Timestamp t = new Timestamp((Long)pair.getValue());
+
+            String eventLogUID = (String)pair.getKey();
+            String eventLogTimestamp = t.toString();
+
+
+            if(arr[3].equals(eventLogUID)) {
+                System.out.println("id: "+eventLogUID + " kafka timestamp: " + eventLogTimestamp +
+                                    "elastic recieve ts: " + arr[0] +" took: " + arr[1] + " elastic sent ts: " +arr[2]);
+
+                j++;
+            }
+            else{
+                continue;
+            }
+            //j++;
         }
+
 
     }
 }

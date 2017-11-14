@@ -5,21 +5,28 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 public class ElasticLogParser {
 
     public static void main(String[] args) {
+        parse();
+    }
+    public static ArrayList<String[]> parse() {
 
         String indicators[] = {"\"receiveTimestamp\":\"", "\",\"resource\"",
                 "took[", "], took_millis[",
-                "\"timestamp\":\""};
+                "\"timestamp\":\"", "\\\"uniqueId\\\""};
 
-        int a, b, x, y, z, exponent = 0;
+        int a, b, x, y, z, c, d, exponent = 0;
+
         String line;
 
+        ArrayList<String[]> toReturn = new ArrayList<>();
+
         // change the filename string inside the fileReader constructor when using a different file
-        try (BufferedReader reader = new BufferedReader(new FileReader("/Users/dalyan/Downloads/logFileExample.json"));
-             PrintWriter output = new PrintWriter(new File("/Users/dalyan/Downloads/timeData.csv"));
+        try (BufferedReader reader = new BufferedReader(new FileReader("logFileExample.json"));
+             PrintWriter output = new PrintWriter(new File("timeData.csv"));
         ){
 
             StringBuilder logLine = new StringBuilder();
@@ -38,9 +45,10 @@ public class ElasticLogParser {
                 x = line.indexOf(indicators[2]) + 5; // beginning of the time taken
                 y = line.indexOf(indicators[3]);
                 z = line.indexOf(indicators[4]) + 13; // beginning of the sent timestamp
+                c = line.indexOf(indicators[5])+13; //beginning of uniqueId
 
                 // data format check
-                if (a == 19 || b == -1 || x == 4 || y == -1 || z == 12) {
+                if (a == 19 || b == -1 || x == 4 || y == -1 || z == 12 || c == 12) {
                     System.out.println("Error: data not in correct format");
                     // must close as try-with-resources statement won't close with a sys exit call
                     output.close();
@@ -56,11 +64,19 @@ public class ElasticLogParser {
                     exponent = -6;
                 }
 
+                d= line.indexOf("}]\\n\",\"timestamp");
+
+
+                String items[] = {line.substring(a, b), line.substring(x, y)+"e"+exponent, line.substring(z,line.length()-2), line.substring(c, d)};
+                toReturn.add(items);
+
                 // print out the captured data
+                /*
                 System.out.println("Received Timestamp: " + line.substring(a, b) +
                         "\tTime Taken: " + line.substring(x, y) + "e" + exponent +
-                        "\tSent Timestamp: " + line.substring(z, line.length() - 2));
-
+                        "\tSent Timestamp: " + line.substring(z, line.length() - 2) +
+                        "\tUnique ID: " + line.substring(c,d));
+                */
                 logLine.append(line.substring(a, b));
                 logLine.append(',');
                 logLine.append(line.substring(x, y));
@@ -68,17 +84,20 @@ public class ElasticLogParser {
                 logLine.append(exponent);
                 logLine.append(',');
                 logLine.append(line.substring(z, line.length() - 2));
+                logLine.append(',');
+                logLine.append(line.substring(c,d));
                 logLine.append('\n');
 
             }
 
             output.write(logLine.toString());
+            return toReturn;
         }
         catch (IOException e) {
             System.out.println("You should check that the fileReader is given the right file location in the code");
             e.printStackTrace();
         }
-
+        return toReturn;
     }
 
 }

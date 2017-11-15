@@ -56,7 +56,7 @@ public class EventLogParser {
 
                     Timestamp t = new Timestamp(longTimestamp);
 
-                    bufferedWriter.write(uid+"\t"+longTimestamp.toString()+"\n");
+                    //bufferedWriter.write(uid+"\t"+longTimestamp.toString()+"\n");
 
                     String arr[] = {uid, t.toString(), eventType};
 

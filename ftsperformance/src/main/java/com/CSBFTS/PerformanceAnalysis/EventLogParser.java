@@ -4,25 +4,27 @@ package com.CSBFTS.PerformanceAnalysis;
 
 import java.io.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class EventLogParser {
 
     public static void main(String[] args) {
-        HashMap<String, Long> map = parseEventLog();
+        ArrayList<String[]> arr = parseEventLog();
 
-        Iterator i = map.entrySet().iterator();
+        /*Iterator i = map.entrySet().iterator();
         while(i.hasNext()) {
             HashMap.Entry pair = (HashMap.Entry)i.next();
             System.out.println("id: "+pair.getKey() + " timestamp: " + pair.getValue());
-        }
+        }*/
 
     }
 
-    public static HashMap<String, Long> parseEventLog() {
+    public static ArrayList<String[]> parseEventLog() {
 
-        HashMap<String,Long> map = new HashMap<>();
+        //HashMap<String,Long> map = new HashMap<>();
+        ArrayList<String[]> toReturn = new ArrayList<>();
         BufferedReader br = null;
 
         try {
@@ -55,10 +57,12 @@ public class EventLogParser {
                     Timestamp t = new Timestamp(longTimestamp);
 
                     bufferedWriter.write(uid+"\t"+longTimestamp.toString()+"\n");
-                    map.put(uid, longTimestamp);
 
-                    //System.out.println("uid: "+uid+" timestamp: " +t.toString());
+                    String arr[] = {uid, t.toString(), eventType};
 
+
+                    System.out.println("uid: "+uid+" timestamp: " +t.toString() + " event type: "+eventType);
+                    return toReturn;
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -67,6 +71,6 @@ public class EventLogParser {
         } catch(IOException e) {
             e.printStackTrace();
         }
-        return map;
+        return toReturn;
     }
 }

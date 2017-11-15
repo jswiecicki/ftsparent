@@ -9,26 +9,29 @@ public class ParserRunner {
     public static void main(String[] args) {
         ArrayList<String[]> slowLogData = ElasticLogParser.parse();
 
-        HashMap<String,Long> eventLogMap = EventLogParser.parseEventLog();
+        ArrayList<String[]> eventLogData = EventLogParser.parseEventLog();
 
-        Iterator i = eventLogMap.entrySet().iterator();
+        Iterator iterator = eventLogData.iterator();
+        //eventLogData.it
 
         int j = 0;
-        while(i.hasNext() && j < slowLogData.size()) {
-            String[] arr = slowLogData.get(j);
-
-            HashMap.Entry pair = (HashMap.Entry)i.next();
-            Timestamp t = new Timestamp((Long)pair.getValue());
-
-            String eventLogUID = (String)pair.getKey();
-            String eventLogTimestamp = t.toString();
+        int i =0;
+        while(iterator.hasNext() && j < slowLogData.size()) {
+            String[] slowLogArr = slowLogData.get(j);
+            String[] eventArr = eventLogData.get(i);
 
 
-            if(arr[3].equals(eventLogUID)) {
+            String eventLogUID = eventArr[0];
+            String eventLogTimestamp = eventArr[1];
+            String eventLogEventType = eventArr[2];
+
+
+            if(slowLogArr[3].equals(eventLogUID)) {
                 System.out.println("id: "+eventLogUID + " kafka timestamp: " + eventLogTimestamp +
-                                    "elastic recieve ts: " + arr[0] +" took: " + arr[1] + " elastic sent ts: " +arr[2]);
+                                    "elastic receive ts: " + slowLogArr[0] +" took: " + slowLogArr[1] + " elastic sent ts: " +slowLogArr[2]);
 
                 j++;
+                //continue;
             }
             else{
                 continue;

@@ -59,9 +59,9 @@ public class EventLogParser {
                     //bufferedWriter.write(uid+"\t"+longTimestamp.toString()+"\n");
 
                     String arr[] = {uid, t.toString(), eventType};
+                    toReturn.add(arr);
 
-
-                    System.out.println("uid: "+uid+" timestamp: " +t.toString() + " event type: "+eventType);
+                    //System.out.println("uid: "+uid+" timestamp: " +t.toString() + " event type: "+eventType);
 
 
                 } catch (Exception e) {

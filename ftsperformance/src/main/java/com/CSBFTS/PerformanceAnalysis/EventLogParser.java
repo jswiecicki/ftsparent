@@ -42,8 +42,12 @@ public class EventLogParser {
                     String uid = line.substring(indexOfID, endIndexID);
 
                     int indexOfTimestamp = line.indexOf("timeGenerated")+15;
-                    int endIndex = line.indexOf("}), time=");
+                    int endIndex = line.indexOf(",\"eventType\"");
 
+                    int indexOfEventType=line.indexOf("eventType")+12;
+                    int endIndexOfEventType=line.indexOf("\"}), time");
+
+                    String eventType = line.substring(indexOfEventType, endIndexOfEventType);
 
                     String ts = line.substring(indexOfTimestamp, endIndex);
                     Long longTimestamp = Long.parseLong(ts);

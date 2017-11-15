@@ -10,15 +10,13 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.*;
+
 
 public class EventGenerator {
     private ObjectMapper mapper;
-    private final static String TOPIC = "test3";
-    private final static String BOOTSTRAP_SERVERS = "35.196.124.101:9092";
+    private final static String BOOTSTRAP_SERVERS = "35.196.48.180:9092";
 
     public EventGenerator(){
         mapper = new ObjectMapper(); // costly operation, reuse heavily
@@ -37,7 +35,7 @@ public class EventGenerator {
         return new KafkaProducer<String, JsonNode>(props);
     }
 
-    public void runProducer(HashMap<Integer, JsonNode> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output) {
+    public void runProducer(HashMap<Integer, JsonNode> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output, String topic) {
         final Producer<String, JsonNode> producer = createProducer();
         long time = System.currentTimeMillis();
 
@@ -45,13 +43,13 @@ public class EventGenerator {
             Integer index = entry.getKey();
             JsonNode jsonData = entry.getValue();
 
-            final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(TOPIC, String.valueOf(index), jsonData); // creates a record to send
+            final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
             producer.send(record);
 
             long elapsedTime = System.currentTimeMillis() - time;
 
             try {
-//                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
+                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
                 output.write("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
             } catch (IOException e) {
                 System.out.println("WHAT!? There was an error writing to the file!");
@@ -74,11 +72,26 @@ public class EventGenerator {
 
     }
 
-    public  HashMap<Integer, JsonNode> createAdd(int amount){
+    public void addAccounts(HashMap<Integer, JsonNode> accountDataMap, String topic){
+        final Producer<String, JsonNode> producer = createProducer();
+
+        for (Map.Entry<Integer, JsonNode> entry : accountDataMap.entrySet()){
+            Integer index = entry.getKey();
+            JsonNode jsonData = entry.getValue();
+
+            final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
+            producer.send(record);
+        }
+
+        producer.flush();
+        producer.close();
+    }
+
+    public  HashMap<Integer, JsonNode> createAdd(int amount, String eventType){
         HashMap<Integer, JsonNode> accountDataMap= new HashMap<Integer, JsonNode>();
 
         for (int i = 1; i <= amount; i++) { // populate the accounts field with example data
-            AccountHolder account = new AccountHolder();
+            AccountHolder account = new AccountHolder(eventType);
             account.setTime(System.currentTimeMillis());
             try {
                 JsonNode jsonData = mapper.readTree(account.toJson());
@@ -93,7 +106,7 @@ public class EventGenerator {
 
 
     public void runAddTest(int numOfCreatedAccounts, int qps, String outputFile){
-        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts);
+        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         long intervalBtwnKafkaMsg = (long)1000/qps;
 
         BufferedWriter output = null;
@@ -104,12 +117,40 @@ public class EventGenerator {
         }
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output);
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test3");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
 
         ESCleanUp.removeElasticsearchEntries(accountDataMap.keySet());
 
+    }
+
+    public void runUpdateTest(int numOfCreatedAccounts, int qps, String outputFile){
+        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts, "update");
+        try {
+            addAccounts(accountDataMap, "test3");
+        } catch (Exception e) {
+            System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
+        }
+
+        long intervalBtwnKafkaMsg = (long)1000/qps;
+
+        BufferedWriter output = null;
+        try {
+            output = new BufferedWriter(new FileWriter(outputFile));
+        } catch (IOException e) {
+            System.out.println("Um wait... We could not open up the file.");
+        }
+
+        accountDataMap = createAdd(numOfCreatedAccounts, "update");
+
+        try {
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test3");
+        } catch (Exception e) {
+            System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
+        }
+
+        ESCleanUp.removeElasticsearchEntries(accountDataMap.keySet());
     }
 }

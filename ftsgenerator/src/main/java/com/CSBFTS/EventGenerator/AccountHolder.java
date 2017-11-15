@@ -11,20 +11,21 @@ public class AccountHolder {
     private String fname, lname, letters = "abcdefghijklmnopqrstuvwxyz";
     private double accountBalance;
     private long timeGenerated;
+    private String eventType;
 
-
-    public AccountHolder() {
-        uniqueId = (int) (Math.random() * 1000000000); // 1 billion possibilities lowers the possibility of choosing the same id twice
-        fname = "";
-        lname = "";
+    public AccountHolder(String eventType){
+        this.uniqueId = (int) (Math.random() * 1000000000); // 1 billion possibilities lowers the possibility of choosing the same id twice
+        this.fname = "";
+        this.lname = "";
 
         for (int i = 0; i < 5; i++) {
-            fname += letters.charAt((int) (Math.random() * 26)); // create two distinct 5 letter names
-            lname += letters.charAt((int) (Math.random() * 26));
+            this.fname += letters.charAt((int) (Math.random() * 26)); // create two distinct 5 letter names
+            this.lname += letters.charAt((int) (Math.random() * 26));
         }
 
-        accountBalance = Math.random() * 1000000; // starting balance is [0.0 to 1mil)
-        timeGenerated = 0;
+        this.accountBalance = Math.random() * 1000000; // starting balance is [0.0 to 1mil)
+        this.timeGenerated = 0;
+        this.eventType = eventType;
     }
 
     public void setTime(long currentTime) {
@@ -40,6 +41,7 @@ public class AccountHolder {
                 .field("lname", lname)
                 .field("accountBalance", accountBalance)
                 .field("timeGenerated", timeGenerated)
+                .field("eventType", eventType)
                 .endObject();
 
         return xb.string();

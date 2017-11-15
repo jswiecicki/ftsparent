@@ -62,12 +62,13 @@ public class EventLogParser {
 
 
                     System.out.println("uid: "+uid+" timestamp: " +t.toString() + " event type: "+eventType);
-                    return toReturn;
+
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+            return toReturn;
         } catch(IOException e) {
             e.printStackTrace();
         }

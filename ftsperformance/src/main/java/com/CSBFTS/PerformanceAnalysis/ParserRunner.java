@@ -10,7 +10,7 @@ public class ParserRunner {
 
         //int j = 0;
         //int i = 0;
-        int counter=0;
+        int counter=1;
         System.out.println("event log size: " + eventLogData.size() + " slow log size: "+slowLogData.size());
         for(int i =0; i < eventLogData.size(); i++) {
             for(int j = 0; j < slowLogData.size(); j++) {
@@ -23,10 +23,10 @@ public class ParserRunner {
 
                 //match
                 if(eventLogUID.equals(slowLogArr[0])) {
-                    //++counter++;
-                    System.out.print(++counter+ " id: " + eventLogUID + "\tkafka timestamp: " + eventLogTimestamp +
+                    System.out.print(counter+ " event UID: " + eventLogUID + "\tkafka timestamp: " + eventLogTimestamp +
                             " \telastic receive ts: " + slowLogArr[1] + "\ttook: " + slowLogArr[2] +
                             "\telastic sent ts: " + slowLogArr[3] + "\tevent type: " + eventLogEventType);
+                    counter++;
 
                     //Timestamp t1 = new Timestamp(String(slowLogArr[1]));
                     Timestamp kafka_ts = Timestamp.valueOf(eventLogTimestamp);
@@ -51,7 +51,7 @@ public class ParserRunner {
                     long ts2 = e_receive_ts.getTime();
 
                     long diff = ts2-ts1;
-                    System.out.println("\tdiff: "+diff);
+                    System.out.println("\t"+diff);
 
                 }
             }

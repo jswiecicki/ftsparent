@@ -37,6 +37,6 @@ public class ParserRunner {
                 }
             }
         }
-        System.out.println("Done matching logs... If nothing printed out than nothing matched up. Sorry, not sorry.");
+        System.out.println("Done matching logs... If nothing printed out then nothing matched up. Sorry");
     }
 }

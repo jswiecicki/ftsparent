@@ -8,33 +8,33 @@ import java.util.HashMap;
 public class ParserRunner {
     public static void main(String[] args) {
         ArrayList<String[]> slowLogData = ElasticLogParser.parse();
-
         ArrayList<String[]> eventLogData = EventLogParser.parseEventLog();
 
-        Iterator iterator = eventLogData.iterator();
-        //eventLogData.it
-
         int j = 0;
-        int i =0;
-        while(iterator.hasNext() && j < slowLogData.size()) {
-            String[] slowLogArr = slowLogData.get(j);
-            String[] eventArr = eventLogData.get(i);
+        int i = 0;
+        while(i < eventLogData.size()) {
+            while(j < slowLogData.size()) {
+                String[] eventLogArr = eventLogData.get(i);
+                String[] slowLogArr = slowLogData.get(j);
 
+                String eventLogUID = eventLogArr[0];
+                String eventLogTimestamp = eventLogArr[1];
+                String eventLogEventType = eventLogArr[2];
 
-            String eventLogUID = eventArr[0];
-            String eventLogTimestamp = eventArr[1];
-            String eventLogEventType = eventArr[2];
+                //match
+                if(eventLogUID.equals(slowLogArr[0])) {
+                    System.out.println("id: " + eventLogUID + " kafka timestamp: " + eventLogTimestamp +
+                            "elastic receive ts: " + slowLogArr[1] + " took: " + slowLogArr[2] +
+                            " elastic sent ts: " + slowLogArr[3] + " event type: " + eventLogEventType);
 
-
-            if(slowLogArr[3].equals(eventLogUID)) {
-                System.out.println("id: "+eventLogUID + " kafka timestamp: " + eventLogTimestamp +
-                                    "elastic receive ts: " + slowLogArr[0] +" took: " + slowLogArr[1] + " elastic sent ts: " +slowLogArr[2]);
-
-                j++;
-                //continue;
-            }
-            else{
-                continue;
+                    //move to next event log line
+                    i++;
+                }
+                //no match
+                else {
+                    //move to next slow log line
+                    j++;
+                }
             }
         }
     }

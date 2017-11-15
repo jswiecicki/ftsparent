@@ -67,7 +67,7 @@ public class ElasticLogParser {
                 d= line.indexOf("}]\\n\",\"timestamp");
 
 
-                String items[] = {line.substring(a, b), line.substring(x, y)+"e"+exponent, line.substring(z,line.length()-2), line.substring(c, d)};
+                String items[] = {line.substring(c, d), line.substring(a, b), line.substring(x, y)+"e"+exponent, line.substring(z,line.length()-2)};
                 toReturn.add(items);
 
                 // print out the captured data

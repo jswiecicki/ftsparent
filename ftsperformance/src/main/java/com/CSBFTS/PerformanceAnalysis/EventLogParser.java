@@ -43,7 +43,7 @@ public class EventLogParser {
 
                     String uid = line.substring(indexOfID, endIndexID);
 
-                    int indexOfTimestamp = line.indexOf("timeGenerated")+15;
+                    int indexOfTimestamp = line.indexOf("timeSent")+15;
                     int endIndex = line.indexOf(",\"eventType\"");
 
                     int indexOfEventType=line.indexOf("eventType")+12;

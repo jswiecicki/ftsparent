@@ -1,10 +1,20 @@
 package com.CSBFTS.EventGenerator;
 
+import com.CSBFTS.Config.ServerConfig;
+import org.apache.http.HttpHost;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.connect.json.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -17,6 +27,8 @@ import java.util.Properties;
 public class EventGenerator {
     private ObjectMapper mapper;
     private final static String BOOTSTRAP_SERVERS = "35.196.48.180:9092";
+    private final static String BULK_INDEX = "accounts_index";
+    private final static String BULK_TYPE = "account";
 
     public EventGenerator(){
         mapper = new ObjectMapper(); // costly operation, reuse heavily
@@ -35,22 +47,29 @@ public class EventGenerator {
         return new KafkaProducer<String, JsonNode>(props);
     }
 
-    public void runProducer(HashMap<Integer, JsonNode> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output, String topic) {
+    public void runProducer(HashMap<Integer, AccountHolder> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output, String topic) {
         final Producer<String, JsonNode> producer = createProducer();
-        long time = System.currentTimeMillis();
+        long sentTime = 0;
 
-        for (Map.Entry<Integer, JsonNode> entry : accountDataMap.entrySet()){
+        for (Map.Entry<Integer, AccountHolder> entry : accountDataMap.entrySet()){
             Integer index = entry.getKey();
-            JsonNode jsonData = entry.getValue();
+            AccountHolder accountData = entry.getValue();
+
+            sentTime = System.currentTimeMillis();
+            accountData.setTime(sentTime);
+            JsonNode jsonData = null;
+            try {
+                jsonData = mapper.readTree(accountData.toJson());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
             producer.send(record);
 
-            long elapsedTime = System.currentTimeMillis() - time;
-
             try {
-                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
-                output.write("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + elapsedTime + "\n");
+                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + sentTime + "\n");
+                output.write("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + sentTime + "\n");
             } catch (IOException e) {
                 System.out.println("WHAT!? There was an error writing to the file!");
             }
@@ -72,12 +91,19 @@ public class EventGenerator {
 
     }
 
-    public void addAccounts(HashMap<Integer, JsonNode> accountDataMap, String topic){
+    public void addAccounts(HashMap<Integer, AccountHolder> accountDataMap, String topic){
         final Producer<String, JsonNode> producer = createProducer();
 
-        for (Map.Entry<Integer, JsonNode> entry : accountDataMap.entrySet()){
+        for (Map.Entry<Integer, AccountHolder> entry : accountDataMap.entrySet()){
             Integer index = entry.getKey();
-            JsonNode jsonData = entry.getValue();
+            AccountHolder accountData = entry.getValue();
+
+            JsonNode jsonData = null;
+            try {
+                jsonData = mapper.readTree(accountData.toJson());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
             producer.send(record);
@@ -87,26 +113,58 @@ public class EventGenerator {
         producer.close();
     }
 
-    public  HashMap<Integer, JsonNode> createAdd(int amount, String eventType){
-        HashMap<Integer, JsonNode> accountDataMap= new HashMap<Integer, JsonNode>();
+    public  HashMap<Integer, AccountHolder> createAdd(int amount, String eventType){
+        HashMap<Integer, AccountHolder> accountDataMap= new HashMap<Integer, AccountHolder>();
 
         for (int i = 1; i <= amount; i++) { // populate the accounts field with example data
             AccountHolder account = new AccountHolder(eventType);
-            account.setTime(System.currentTimeMillis());
-            try {
-                JsonNode jsonData = mapper.readTree(account.toJson());
-                accountDataMap.put(i, jsonData);
-            } catch (IOException e) {
-                System.out.println("Uh oh spagetio! There was an error converting account to JSON!");
-            }
+            accountDataMap.put(i, account);
         }
 
         return accountDataMap;
     }
 
+    //Adds acounts in 25,000 account increments
+    public void bulkAddAccounts(int amount) {
+        HashMap<Integer,AccountHolder> accountDataMap;
+        RestClient client  = RestClient.builder(
+                new HttpHost(ServerConfig.ELASTICSEARCH_IP, 9200, "http")).build();
+
+        RestHighLevelClient hlClient = new RestHighLevelClient(client);
+
+        accountDataMap = createAdd(amount, "add");
+        BulkRequest request = new BulkRequest();
+        for(int i = 1; i <= amount; i++) {
+            String accountDataJson = null;
+            try {
+               accountDataJson = accountDataMap.get(i).toJson();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            request.add(new IndexRequest(BULK_INDEX, BULK_TYPE, String.valueOf(i)).source(accountDataJson, XContentType.JSON));
+            if(i % 25000 == 0) {
+                BulkResponse bulkResponse = null;
+                try {
+                    bulkResponse = hlClient.bulk(request);
+                    if(bulkResponse.hasFailures()) {
+                        for (BulkItemResponse bulkItemsResponse : bulkResponse){
+                            if (bulkItemsResponse.isFailed()) {
+                                BulkItemResponse.Failure failure = bulkItemsResponse.getFailure();
+                                System.out.println(failure.toString());
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                request = new BulkRequest();
+            }
+        }
+    }
+
 
     public void runAddTest(int numOfCreatedAccounts, int qps, String outputFile){
-        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts, "add");
+        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         long intervalBtwnKafkaMsg = (long)1000/qps;
 
         BufferedWriter output = null;
@@ -117,7 +175,7 @@ public class EventGenerator {
         }
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test3");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test5");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -127,9 +185,9 @@ public class EventGenerator {
     }
 
     public void runUpdateTest(int numOfCreatedAccounts, int qps, String outputFile){
-        HashMap<Integer, JsonNode> accountDataMap = createAdd(numOfCreatedAccounts, "update");
+        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "update");
         try {
-            addAccounts(accountDataMap, "test3");
+            addAccounts(accountDataMap, "test5");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -146,7 +204,7 @@ public class EventGenerator {
         accountDataMap = createAdd(numOfCreatedAccounts, "update");
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test3");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test5");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }

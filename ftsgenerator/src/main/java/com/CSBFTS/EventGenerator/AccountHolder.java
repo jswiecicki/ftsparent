@@ -10,7 +10,7 @@ public class AccountHolder {
     private int uniqueId;
     private String fname, lname, letters = "abcdefghijklmnopqrstuvwxyz";
     private double accountBalance;
-    private long timeGenerated;
+    private long timeSent;
     private String eventType;
 
     public AccountHolder(String eventType){
@@ -24,12 +24,12 @@ public class AccountHolder {
         }
 
         this.accountBalance = Math.random() * 1000000; // starting balance is [0.0 to 1mil)
-        this.timeGenerated = 0;
+        this.timeSent = 0;
         this.eventType = eventType;
     }
 
     public void setTime(long currentTime) {
-        timeGenerated = currentTime;
+        timeSent = currentTime;
     }
 
     public String toJson() throws IOException {
@@ -40,7 +40,7 @@ public class AccountHolder {
                 .field("fname", fname)
                 .field("lname", lname)
                 .field("accountBalance", accountBalance)
-                .field("timeGenerated", timeGenerated)
+                .field("timeSent", timeSent)
                 .field("eventType", eventType)
                 .endObject();
 

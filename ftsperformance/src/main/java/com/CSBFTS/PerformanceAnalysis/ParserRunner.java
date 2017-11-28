@@ -21,11 +21,17 @@ public class ParserRunner {
                 String eventLogTimestamp = eventLogArr[1];
                 String eventLogEventType = eventLogArr[2];
 
+                String slowLogReceiveTimestamp = slowLogArr[1];
+                String slowLogTook = slowLogArr[2];
+                String slowLogSentTimestamp = slowLogArr[3];
+
                 //match
                 if(eventLogUID.equals(slowLogArr[0])) {
+
+
                     System.out.print(counter+ " event UID: " + eventLogUID + "\tkafka timestamp: " + eventLogTimestamp +
-                            " \telastic receive ts: " + slowLogArr[1] + "\ttook: " + slowLogArr[2] +
-                            "\telastic sent ts: " + slowLogArr[3] + "\tevent type: " + eventLogEventType);
+                            " \telastic receive ts: " + slowLogReceiveTimestamp + "\ttook: " + slowLogTook +
+                            "\telastic sent ts: " + slowLogSentTimestamp + "\tevent type: " + eventLogEventType);
                     counter++;
 
                     //Timestamp t1 = new Timestamp(String(slowLogArr[1]));

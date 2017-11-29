@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class ESCleanUp {
     final static String index = "accounts_index";
-    final static String type = "account";
+    final static String type = "accountnew";
 
 
     public static void removeElasticsearchEntries(Set<Integer> keySet){

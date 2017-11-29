@@ -4,6 +4,8 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 //import java.util.Date;
 //import java.util.List;
 
@@ -13,6 +15,7 @@ public class AccountHolder {
     private double accountBalance;
     private String timeEventSent;
     private String eventType;
+
 
     public AccountHolder(String eventType){
         this.uniqueId = (int) (Math.random() * 1000000000); // 1 billion possibilities lowers the possibility of choosing the same id twice
@@ -29,8 +32,8 @@ public class AccountHolder {
         this.eventType = eventType;
     }
 
-    public void setTime() {
-        timeEventSent = new Timestamp(System.currentTimeMillis()).toString();
+    public void setTime(String timeEventSent) {
+        this.timeEventSent = timeEventSent;
     }
 
     public String toJson() throws IOException {

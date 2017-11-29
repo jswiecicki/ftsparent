@@ -19,9 +19,11 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 
 public class EventGenerator {
@@ -29,9 +31,12 @@ public class EventGenerator {
     private final static String BOOTSTRAP_SERVERS = "35.196.104.252:9092";
     private final static String BULK_INDEX = "accounts_index";
     private final static String BULK_TYPE = "accountnew";
+    final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
 
     public EventGenerator(){
         mapper = new ObjectMapper(); // costly operation, reuse heavily
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     private static Producer<String, JsonNode> createProducer() {
@@ -51,18 +56,21 @@ public class EventGenerator {
         final Producer<String, JsonNode> producer = createProducer();
         long sentTime = 0;
 
+
         for (Map.Entry<Integer, AccountHolder> entry : accountDataMap.entrySet()){
             Integer index = entry.getKey();
             AccountHolder accountData = entry.getValue();
 
 
-            accountData.setTime();
+            accountData.setTime(sdf.format(System.currentTimeMillis()));
             JsonNode jsonData = null;
+
             try {
                 jsonData = mapper.readTree(accountData.toJson());
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
 
             final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
             producer.send(record);
@@ -94,10 +102,12 @@ public class EventGenerator {
     public void addAccounts(HashMap<Integer, AccountHolder> accountDataMap, String topic){
         final Producer<String, JsonNode> producer = createProducer();
 
+
         for (Map.Entry<Integer, AccountHolder> entry : accountDataMap.entrySet()){
             Integer index = entry.getKey();
             AccountHolder accountData = entry.getValue();
 
+            accountData.setTime(sdf.format(System.currentTimeMillis()));
             JsonNode jsonData = null;
             try {
                 jsonData = mapper.readTree(accountData.toJson());
@@ -185,7 +195,7 @@ public class EventGenerator {
     }
 
     public void runUpdateTest(int numOfCreatedAccounts, int qps, String outputFile){
-        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "update");
+        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         try {
             addAccounts(accountDataMap, "test6");
         } catch (Exception e) {

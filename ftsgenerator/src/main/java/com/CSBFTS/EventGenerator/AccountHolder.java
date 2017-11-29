@@ -3,6 +3,7 @@ package com.CSBFTS.EventGenerator;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import java.io.IOException;
+import java.sql.Timestamp;
 //import java.util.Date;
 //import java.util.List;
 
@@ -10,7 +11,7 @@ public class AccountHolder {
     private int uniqueId;
     private String fname, lname, letters = "abcdefghijklmnopqrstuvwxyz";
     private double accountBalance;
-    private long timeSent;
+    private String timeEventSent;
     private String eventType;
 
     public AccountHolder(String eventType){
@@ -24,12 +25,12 @@ public class AccountHolder {
         }
 
         this.accountBalance = Math.random() * 1000000; // starting balance is [0.0 to 1mil)
-        this.timeSent = 0;
+        this.timeEventSent = "";
         this.eventType = eventType;
     }
 
-    public void setTime(long currentTime) {
-        timeSent = currentTime;
+    public void setTime() {
+        timeEventSent = new Timestamp(System.currentTimeMillis()).toString();
     }
 
     public String toJson() throws IOException {
@@ -40,7 +41,7 @@ public class AccountHolder {
                 .field("fname", fname)
                 .field("lname", lname)
                 .field("accountBalance", accountBalance)
-                .field("timeSent", timeSent)
+                .field("timeEventSent", timeEventSent)
                 .field("eventType", eventType)
                 .endObject();
 

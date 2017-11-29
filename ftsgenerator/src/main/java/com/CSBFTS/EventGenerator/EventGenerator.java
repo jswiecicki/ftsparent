@@ -26,9 +26,9 @@ import java.util.Properties;
 
 public class EventGenerator {
     private ObjectMapper mapper;
-    private final static String BOOTSTRAP_SERVERS = "35.196.48.180:9092";
+    private final static String BOOTSTRAP_SERVERS = "35.196.104.252:9092";
     private final static String BULK_INDEX = "accounts_index";
-    private final static String BULK_TYPE = "account";
+    private final static String BULK_TYPE = "accountnew";
 
     public EventGenerator(){
         mapper = new ObjectMapper(); // costly operation, reuse heavily
@@ -55,8 +55,8 @@ public class EventGenerator {
             Integer index = entry.getKey();
             AccountHolder accountData = entry.getValue();
 
-            sentTime = System.currentTimeMillis();
-            accountData.setTime(sentTime);
+
+            accountData.setTime();
             JsonNode jsonData = null;
             try {
                 jsonData = mapper.readTree(accountData.toJson());
@@ -175,7 +175,7 @@ public class EventGenerator {
         }
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test5");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test6");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -187,7 +187,7 @@ public class EventGenerator {
     public void runUpdateTest(int numOfCreatedAccounts, int qps, String outputFile){
         HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "update");
         try {
-            addAccounts(accountDataMap, "test5");
+            addAccounts(accountDataMap, "test6");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -204,7 +204,7 @@ public class EventGenerator {
         accountDataMap = createAdd(numOfCreatedAccounts, "update");
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test5");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test6");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }

@@ -11,7 +11,7 @@ public class TestRunner {
     public static void main(String[] args) throws Exception {
         EventGenerator eGen = new EventGenerator();
        // eGen.bulkAddAccounts(1000000);
-        eGen.runUpdateTest(50000,200,"event_gen_output.txt");
+        eGen.runDeleteTest(10,1);
         /*
         if (args.length == 0) {
             eGen.runAddTest(15, 5, "event_gen_output.txt"); // arg specifies how many times to send a message

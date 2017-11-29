@@ -52,7 +52,7 @@ public class EventGenerator {
         return new KafkaProducer<String, JsonNode>(props);
     }
 
-    public void runProducer(HashMap<Integer, AccountHolder> accountDataMap, long intervalBtwnKafkaMsg, BufferedWriter output, String topic) {
+    public void runProducer(HashMap<Integer, AccountHolder> accountDataMap, long intervalBtwnKafkaMsg, String topic) {
         final Producer<String, JsonNode> producer = createProducer();
         long sentTime = 0;
 
@@ -75,23 +75,15 @@ public class EventGenerator {
             final ProducerRecord<String, JsonNode> record = new ProducerRecord<>(topic, String.valueOf(index), jsonData); // creates a record to send
             producer.send(record);
 
-            try {
-                System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + sentTime + "\n");
-                output.write("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + sentTime + "\n");
-            } catch (IOException e) {
-                System.out.println("WHAT!? There was an error writing to the file!");
-            }
+
+            System.out.print("sent record(key=" +  record.key() +" value=" + record.value() + "), time=" + sentTime + "\n");
+
 
             try {
                 Thread.sleep(intervalBtwnKafkaMsg);
             } catch (InterruptedException e) {
                 System.out.println("Oopsie daisy, there was an issue sleeping the thread!");
             }
-        }
-        try {
-            output.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         producer.flush();
@@ -173,19 +165,13 @@ public class EventGenerator {
     }
 
 
-    public void runAddTest(int numOfCreatedAccounts, int qps, String outputFile){
+    public void runAddTest(int numOfCreatedAccounts, int qps){
         HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         long intervalBtwnKafkaMsg = (long)1000/qps;
 
-        BufferedWriter output = null;
-        try {
-            output = new BufferedWriter(new FileWriter(outputFile));
-        } catch (IOException e) {
-            System.out.println("Um wait... We could not open up the file.");
-        }
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test6");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, "test6");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -194,7 +180,7 @@ public class EventGenerator {
 
     }
 
-    public void runUpdateTest(int numOfCreatedAccounts, int qps, String outputFile){
+    public void runUpdateTest(int numOfCreatedAccounts, int qps){
         HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         try {
             addAccounts(accountDataMap, "test6");
@@ -204,21 +190,33 @@ public class EventGenerator {
 
         long intervalBtwnKafkaMsg = (long)1000/qps;
 
-        BufferedWriter output = null;
-        try {
-            output = new BufferedWriter(new FileWriter(outputFile));
-        } catch (IOException e) {
-            System.out.println("Um wait... We could not open up the file.");
-        }
 
         accountDataMap = createAdd(numOfCreatedAccounts, "update");
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, output, "test6");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, "test6");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
 
         ESCleanUp.removeElasticsearchEntries(accountDataMap.keySet());
+    }
+
+    public void runDeleteTest(int numOfCreatedAccounts, int qps){
+        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
+        try {
+            addAccounts(accountDataMap, "test6");
+        } catch (Exception e) {
+            System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
+        }
+
+        long intervalBtwnKafkaMsg = (long)1000/qps;
+
+        try {
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, "deletetest");
+        } catch (Exception e) {
+            System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
+        }
+
     }
 }

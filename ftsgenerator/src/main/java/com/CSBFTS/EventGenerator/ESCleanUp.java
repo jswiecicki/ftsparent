@@ -47,9 +47,12 @@ public class ESCleanUp {
                     }
                 }
             }
+            client.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
 
     }
 

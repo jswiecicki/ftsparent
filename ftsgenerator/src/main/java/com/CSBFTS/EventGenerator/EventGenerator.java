@@ -52,7 +52,7 @@ public class EventGenerator {
         return new KafkaProducer<String, JsonNode>(props);
     }
 
-    public void runProducer(HashMap<Integer, AccountHolder> accountDataMap, long intervalBtwnKafkaMsg, String topic) {
+    public void runProducer(HashMap<Integer, AccountHolder> accountDataMap, long intervalBtwnKafkaMsg, int nanoInterval, String topic) {
         final Producer<String, JsonNode> producer = createProducer();
         long sentTime = 0;
 
@@ -80,7 +80,7 @@ public class EventGenerator {
 
 
             try {
-                Thread.sleep(intervalBtwnKafkaMsg);
+                Thread.sleep(intervalBtwnKafkaMsg, nanoInterval);
             } catch (InterruptedException e) {
                 System.out.println("Oopsie daisy, there was an issue sleeping the thread!");
             }
@@ -164,14 +164,21 @@ public class EventGenerator {
         }
     }
 
+    public static int fractionPartAsInt(double d, int digits){
+        return (int)((d - ((int)d)) * Math.pow(10, digits));
+    }
+
+
 
     public void runAddTest(int numOfCreatedAccounts, int qps){
         HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         long intervalBtwnKafkaMsg = (long)1000/qps;
-
+        double doubleInterval = 1000.0/qps;
+        int nanoIntervalBtwnKafkaMsg = (int) ((doubleInterval - intervalBtwnKafkaMsg) * 1000000);
+        System.out.println(intervalBtwnKafkaMsg+","+nanoIntervalBtwnKafkaMsg);
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, "test6");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, nanoIntervalBtwnKafkaMsg, "test12");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -181,20 +188,23 @@ public class EventGenerator {
     }
 
     public void runUpdateTest(int numOfCreatedAccounts, int qps){
-        HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
+        HashMap<Integer, AccountHolder> accountDataMap = null;
         try {
-            addAccounts(accountDataMap, "test6");
+            bulkAddAccounts(numOfCreatedAccounts);
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
 
         long intervalBtwnKafkaMsg = (long)1000/qps;
+        double doubleInterval = 1000.0/qps;
+        int nanoIntervalBtwnKafkaMsg = (int) ((doubleInterval - intervalBtwnKafkaMsg) * 1000000);
+
 
 
         accountDataMap = createAdd(numOfCreatedAccounts, "update");
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, "test6");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, nanoIntervalBtwnKafkaMsg,"test12");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
@@ -205,15 +215,18 @@ public class EventGenerator {
     public void runDeleteTest(int numOfCreatedAccounts, int qps){
         HashMap<Integer, AccountHolder> accountDataMap = createAdd(numOfCreatedAccounts, "add");
         try {
-            addAccounts(accountDataMap, "test6");
+            addAccounts(accountDataMap, "test12");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
 
         long intervalBtwnKafkaMsg = (long)1000/qps;
+        double doubleInterval = 1000.0/qps;
+        int nanoIntervalBtwnKafkaMsg = (int) ((doubleInterval - intervalBtwnKafkaMsg) * 1000000);
+
 
         try {
-            runProducer(accountDataMap, intervalBtwnKafkaMsg, "deletetest");
+            runProducer(accountDataMap, intervalBtwnKafkaMsg, nanoIntervalBtwnKafkaMsg,"deletetest1");
         } catch (Exception e) {
             System.out.println("Mama Mia! There was issue running the producer in runAddTest!");
         }
